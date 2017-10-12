@@ -54,8 +54,8 @@ def predict(sess, X, graph, params, idx_phone_map,
     for idx, epoch in enumerate(utility.gen_epochs(X, y, 1, batch_size, num_steps)):
         for step, (X_batch, y_batch) in enumerate(epoch):
             # Perform predictions
-            actual_abatch_size = len(X_batch)
-            dummy_y = np.zeros((actual_abatch_size, params['num_steps']))
+            actual_batch_size = len(X_batch)
+            dummy_y = np.zeros((actual_batch_size, params['num_steps']))
             X_batch = np.asarray(X_batch)
             feed_dict = {graph['x']:X_batch[:, :, 1:], graph['y']:dummy_y}
             loss_, predict_ = sess.run([graph['total_loss'], \
@@ -83,7 +83,7 @@ def predict(sess, X, graph, params, idx_phone_map,
 
     out_file.close()
 
-def train_network(X, y, graph, params):
+def train_network(X, y, graph, params, model_path):
     batch_size = params['batch_size']
     num_steps = params['num_steps']
     num_epochs = params['num_epochs']
@@ -122,6 +122,13 @@ def train_network(X, y, graph, params):
                 training_losses.append(training_loss/100)
                 training_loss = 0
                 eval_network(sess, X_test, y_test, graph, params)
+            break
+
+    # Save trained model
+    print('Saving model to ', model_path)
+    model_saver = tf.train.Saver()
+    model_saver.save(sess, model_path)
+
     return sess, training_losses
 
 
@@ -130,8 +137,7 @@ if __name__ == '__main__':
     raw_data = utility.read_data('./data', 'mfcc', 'train')
     labels = utility.read_train_labels('./data/train.lab')
     (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/01.model'
-    # model_saver = tf.train.Saver()
+    model_path = './model/rnn_lstm/01 '
 
     params = dict(
         state_size = 100,
@@ -141,17 +147,13 @@ if __name__ == '__main__':
         # num_layer = 1
         fea_num = 39,
         learning_rate = 1e-4,
-        num_epochs = 8)
+        num_epochs = 1)
 
     # Building network
     graph = network.build_lstm_graph(params)
 
     # Training
-    sess, training_losses = train_network(X, y, graph, params)
-
-    # Save trained model
-    # print('Saving model to ', model_path)
-    # model_saver.save(sess, model_path)
+    sess, training_losses = train_network(X, y, graph, params, model_path)
 
     # Testing
     print('Testing...')

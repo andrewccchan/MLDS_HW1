@@ -55,6 +55,13 @@ def build_lstm_graph(params):
     total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y))
     train_step = tf.train.AdamOptimizer(learning_rate).minimize(total_loss)
 
+    tf.add_to_collection('predictions', predictions)
+    tf.add_to_collection('train_step', train_step)
+    tf.add_to_collection('total_loss', total_loss)
+    # tf.add_to_collection('final_state', final_state)
+    tf.add_to_collection('x', x)
+    tf.add_to_collection('y', y)
+
     return dict(
         x = x,
         y = y,
