@@ -3,8 +3,14 @@ import numpy as np
 import tensorflow as tf
 import utility
 import network
-from sklearn.model_selection import train_test_split
+from utility import BatchGenerator
 #TODO: Note that sklearn is used for non-training purpose in this code
+
+def split_train_test(data, test_ratio):
+    data_len = len(data)
+    test_len = int(data_len * test_ratio)
+    np.random.shuffle(data)
+    return (data[test_len:], data[:test_len])
 
 # Post-process phone buffer (remove leading and tailing 'sil' and aslo repetitive chars)
 def process_phone_buffer(phone_buffer):
@@ -24,23 +30,43 @@ def process_phone_buffer(phone_buffer):
     return ''.join(processed)
 
 
-def eval_network(sess, X, y, graph, params, max_batch = 30):
+def eval_network(sess, test_speaker, graph, params, max_speaker=None):
     # print('Validating network...')
     batch_size = params['batch_size']
-    num_steps = params['num_steps']
+    # num_steps = params['num_steps']
     step_cnt = 0
     total_loss = 0
-    for idx, epoch in enumerate(utility.gen_epochs(X, y, 1, batch_size, num_steps, True)):
-        for step, (X_batch, y_batch) in enumerate(epoch):
-            actual_abatch_size = len(X_batch)
-            feed_dict = {graph['x']: X_batch, graph['y']: y_batch}
-            loss_, _ = sess.run([graph['total_loss'],
-             graph['train_step']], feed_dict=feed_dict)
-            step_cnt += 1
-            total_loss += loss_
-            if step >= max_batch:
-                break
+
+    # If max_speaker is specified, randomly sample `max_speakers` for validation
+    if max_speaker != None:
+        indices = np.random.choice(range(len(test_speaker)), max_speaker, replace=False)
+        sampled_spk = [test_speaker[i] for i in indices]
+    else:
+        sampled_spk = test_speaker
+
+    # Batch generator
+    batch_gen = BatchGenerator(sampled_spk, batch_size)
+
+    while batch_gen.check_next_batch():
+        data = batch_gen.gen_batch()
+        x = []
+        y = []
+        ids = []
+        for d in data:
+            ids.append(d[0])
+            x.append(d[1])
+            y.append(d[2])
+        feed_dict = {graph['x']:x, graph['y']:y}
+        loss_, _ = sess.run([graph['total_loss'],
+                graph['train_step']], feed_dict=feed_dict)
+        total_loss += loss_
+        step_cnt += 1
+
+    for s in sampled_spk:
+        s.reset()
+
     print('Validation loss = {}'.format(total_loss / step_cnt))
+
 
 def predict(sess, X, graph, params, idx_phone_map,
             phone_reduce_map, reduce_char_map, out_path):
@@ -83,33 +109,39 @@ def predict(sess, X, graph, params, idx_phone_map,
 
     out_file.close()
 
-def train_network(X, y, graph, params, model_path):
+def train_network(speaker_list, graph, params, model_path):
     batch_size = params['batch_size']
-    num_steps = params['num_steps']
+    # num_steps = params['num_steps']
     num_epochs = params['num_epochs']
-    X = np.asarray(X)
-    y = np.asarray(y)
-    # X2 = X[0:501, :]
-    # y2 = y[0:501]
-    # print(X.shape)
-    # print(y.shape)
+
+    print('Tatal #sample=', len(speaker_list))
     # Split training and validation set
-    (X_train, X_test, y_train, y_test) = train_test_split(X, y,
-            test_size=0.2, random_state=42)
+    (train_speaker, test_speaker) = split_train_test(speaker_list, 0.1)
+    print('Training on {} samples, testing on {} samples'.format(len(train_speaker), len(test_speaker)))
 
     # Begin tensorflow training session
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
     training_losses = []
-    for idx, epoch in enumerate(utility.gen_epochs(X_train, y_train, num_epochs, batch_size, num_steps)):
+
+
+    for idx in range(num_epochs):
+        print('Epoch: {}'.format(idx))
+        batch_gen = BatchGenerator(train_speaker, batch_size)
+        step = 0
         training_loss = 0
         training_state = None
-        print('Epoch: {}'.format(idx))
-        for step, (X, y) in enumerate(epoch):
-            # params['batch_size'] = len(X)
-            # print("graph['x'] dim={}".format(graph['x'].get_shape()))
-            # print('X dim={}'.format(X.shape))
-            feed_dict = {graph['x']:X, graph['y']:y}
+        while batch_gen.check_next_batch():
+            data = batch_gen.gen_batch()
+            x = []
+            y = []
+            ids = []
+            for d in data:
+                ids.append(d[0])
+                x.append(d[1])
+                y.append(d[2])
+            # Fill feed_dict
+            feed_dict = {graph['x']:x, graph['y']:y}
             if training_state is not None:
                 graph['init_state'] = training_state
             training_loss_, training_state, _ = \
@@ -117,12 +149,18 @@ def train_network(X, y, graph, params, model_path):
                     graph['final_state'],
                     graph['train_step']], feed_dict=feed_dict)
             training_loss += training_loss_
+
+            # Validation
             if step % 100 == 0 and step > 0:
                 print("Training loss at step", step, "=", training_loss/100)
                 training_losses.append(training_loss/100)
                 training_loss = 0
-                eval_network(sess, X_test, y_test, graph, params)
-            break
+                eval_network(sess, test_speaker, graph, params, 3)
+            step += 1
+
+        # Reset speakers in list
+        for s in speaker_list:
+            s.reset()
 
     # Save trained model
     print('Saving model to ', model_path)
@@ -133,30 +171,33 @@ def train_network(X, y, graph, params, model_path):
 
 
 if __name__ == '__main__':
-    (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')
-    raw_data = utility.read_data('./data', 'mfcc', 'train')
-    labels = utility.read_train_labels('./data/train.lab')
-    (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/rnn_lstm/01 '
-
     params = dict(
         state_size = 100,
         num_classes = 48,
-        batch_size = 32,
+        batch_size = 128,
         num_steps = 10,
         # num_layer = 1
         fea_num = 39,
         learning_rate = 1e-4,
-        num_epochs = 1)
+        num_epochs = 10)
+
+    (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')
+    data = utility.read_data('./data', 'mfcc', 'train')
+    labels = utility.read_train_labels('./data/train.lab')
+    speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)
+    # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
+    model_path = './model/rnn_lstm/03'
+
+
 
     # Building network
     graph = network.build_lstm_graph(params)
 
     # Training
-    sess, training_losses = train_network(X, y, graph, params, model_path)
+    sess, training_losses = train_network(speaker_list, graph, params, model_path)
 
     # Testing
-    print('Testing...')
-    test_data = utility.read_data('./data', 'mfcc', 'test')
-    predict(sess, test_data, graph, params, idx_phone_map,
-            phone_reduce_map, reduce_char_map, './out/01.out')
+    # print('Testing...')
+    # test_data = utility.read_data('./data', 'mfcc', 'test')
+    # predict(sess, test_data, graph, params, idx_phone_map,
+    #         phone_reduce_map, reduce_char_map, './out/01.out')
