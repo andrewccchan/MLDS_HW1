@@ -179,14 +179,14 @@ if __name__ == '__main__':
         # num_layer = 1
         fea_num = 39,
         learning_rate = 1e-4,
-        num_epochs = 10)
+        num_epochs = 50)
 
     (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')
     data = utility.read_data('./data', 'mfcc', 'train')
     labels = utility.read_train_labels('./data/train.lab')
     speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)
     # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/rnn_lstm/03'
+    model_path = './model/rnn_lstm/04'
 
 
 

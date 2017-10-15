@@ -49,6 +49,7 @@ def get_speaker_id(phone_id):
 def output_phone_sequence(phone_wise, path):
     phone_buffer = []
     out_file = open(path, 'w')
+    out_file.write('id,phone_sequence\n')
     for idx in range(len(phone_wise)):
         phone_buffer.append(phone_transform(phone_wise[idx][1], level=3))
 
@@ -131,7 +132,7 @@ def predict(speaker_list, model_path, model_name, out_path):
 
 if __name__ == '__main__':
     model_path = './model/rnn_lstm/'
-    model_name = '03'
-    test_data = utility.read_data('./data', 'mfcc', 'train')
+    model_name = '04'
+    test_data = utility.read_data('./data', 'mfcc', 'test')
     speaker_list = utility.gen_speaker_list(phone_idx_map, 10, test_data)
     predict(speaker_list, model_path, model_name, './out')
