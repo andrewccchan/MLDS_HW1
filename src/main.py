@@ -175,7 +175,7 @@ if __name__ == '__main__':
         state_size = 100,
         num_classes = 48,
         batch_size = 128,
-        num_steps = 10,
+        num_steps = 15,
         # num_layer = 1
         fea_num = 39,
         learning_rate = 1e-4,
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     labels = utility.read_train_labels('./data/train.lab')
     speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)
     # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/rnn_lstm/04'
+    model_path = './model/rnn_lstm/07'
 
 
 

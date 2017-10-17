@@ -46,7 +46,22 @@ def phone_transform(idx, level=0):
 def get_speaker_id(phone_id):
     return '_'.join(phone_id.split('_')[0:2])
 
-def output_phone_sequence(phone_wise, path):
+def output_smoothing(phone_wise, length):
+    edited_phone = []
+    tmp = []
+    for _, p in enumerate(phone_wise):
+        if len(tmp) > 0 and p[1] != tmp[-1][1]:
+            if len(tmp) > length:
+                edited_phone.extend(tmp)
+            tmp = []
+        tmp.append(p)
+    if len(tmp) > length:
+        edited_phone.extend(tmp)
+    return edited_phone
+
+def output_phone_sequence(phone_wise, path, smooth_len=0):
+    if smooth_len > 0:
+        phone_wise = output_smoothing(phone_wise, smooth_len)
     phone_buffer = []
     out_file = open(path, 'w')
     out_file.write('id,phone_sequence\n')
@@ -83,7 +98,7 @@ def predict(speaker_list, model_path, model_name, out_path):
     #TODO: read hyper-parameters from model file
     # hyper-parameters
     batch_size = 128
-    num_steps = 10
+    num_steps = 15
     # out_file = open(out_path, 'w')
     # out_file.write('id,phone_sequence\n')
 
@@ -127,12 +142,12 @@ def predict(speaker_list, model_path, model_name, out_path):
                 phone_wise.append([ids[idx][-1], predict_[idx]])
 
     # Generate phone sequences
-    output_phone_wise(phone_wise, os.path.join(out_path, 'phone_wise.out'), level=1)
-    output_phone_sequence(phone_wise, os.path.join(out_path, 'phone_sequence.out'))
+    output_phone_wise(phone_wise, os.path.join(out_path, '07_phone_wise_train.out'), level=1)
+    output_phone_sequence(phone_wise, os.path.join(out_path, '07_phone_sequence_train.out'), 2)
 
 if __name__ == '__main__':
     model_path = './model/rnn_lstm/'
-    model_name = '04'
-    test_data = utility.read_data('./data', 'mfcc', 'test')
-    speaker_list = utility.gen_speaker_list(phone_idx_map, 10, test_data)
+    model_name = '06'
+    test_data = utility.read_data('./data', 'mfcc', 'train')
+    speaker_list = utility.gen_speaker_list(phone_idx_map, 15, test_data)
     predict(speaker_list, model_path, model_name, './out')
