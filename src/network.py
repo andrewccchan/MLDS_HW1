@@ -30,6 +30,7 @@ def build_cnn_lstm_graph(params):
     cnn_filter_num = params['cnn_filter_num'] # list of int (#filter for each layer)
     cnn_layer_num = params['cnn_layer_num']
     cnn_pool_size = params['cnn_pool_size'] # list of int (pooling size)
+    fc_layer_size = params['fc_layer_size'] # FC layer sizes (a list of int)
     rnn_state_size = params['rnn_state_size']
     learning_rate = params['learning_rate']
     # rnn_num_steps = params['rnn_num_steps']
@@ -38,7 +39,7 @@ def build_cnn_lstm_graph(params):
     # Input and output 
     x = tf.placeholder(tf.float32, [None, num_steps, feature_size], \
     name='cnn_input_layer')
-    y = tf.placeholder(tf.float32, [None, num_steps], \
+    y = tf.placeholder(tf.int32, [None, num_steps], \
     name='rnn_output_layer')
 
     # CNN layers
@@ -54,28 +55,48 @@ def build_cnn_lstm_graph(params):
         bias = get_bias_variable([output_channel])
         hs.append(max_pool(tf.nn.relu(conv2d(hs[-1], weight) + bias), cnn_pool_size[idx]))
     
-    cnn_output = hs[-1]
+    conv_output = hs[-1]
+    conv_output_dims = conv_output.get_shape().as_list()
     # Expected shape of output (cnn_num_steps, reduced_feature_size, cnn_filter_num[-1])
-    print('CNN output. Tensor shape = ', tf.shape(cnn_output))
+    print('CNN output. Tensor shape = ', conv_output_dims)
 
-    # Swap feature dimension and the channel dimension
-    rnn_input = tf.transpose(cnn_output, perm=[0, 2, 3, 1])
-    print('RNN input. Tensor shape = ', tf.shape(rnn_input))
+    # Reshape conv. output for FC layers
+    fc_dim1 = conv_output_dims[1]
+    fc_dim2 = conv_output_dims[2]*conv_output_dims[3]
+    fc1_input = tf.reshape(conv_output, [-1, fc_dim1, fc_dim2])
+    print('FC input. Tensor shape = ', fc1_input.get_shape().as_list())
+
+    # FC layers
+    last_output = tf.reshape(fc1_input, [-1, fc_dim2])
+    for idx in range(len(fc_layer_size)):
+        print('FC {}. Input tensor shape = {}'.format(idx, last_output.get_shape().as_list()))
+        input_dim = last_output.get_shape().as_list()[-1]
+        fc_w = get_weight_variable([input_dim, fc_layer_size[idx]])
+        fc_b = get_bias_variable([fc_layer_size[idx]])
+        # tmp = tf.reshape(hs[-1], [-1, input_dim])
+        last_output = tf.nn.relu(tf.matmul(last_output, fc_w) + fc_b) #NOTE not sure whether to use activation or not
+    
+    print('FC output. Tensor shape = ', last_output.get_shape().as_list())
+
+    rnn_input = tf.reshape(last_output, [-1, num_steps, fc_layer_size[-1]])
+    print('RNN input. Tensor shape = ', rnn_input.get_shape().as_list())
     
     # RNN LSTM model
-    input_dims = tf.shape(rnn_input)
+    input_dims = rnn_input.get_shape().as_list()
+    batch_size = tf.shape(rnn_input)[0]
     cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
-    rnn_init_state = cell.zero_state(input_dims[0], tf.float32)
-    rnn_outputs, rnn_final_state = tf.nn.dynamic_rnn(cell, rnn_input, init_state=rnn_init_state)
+    rnn_init_state = cell.zero_state(batch_size, tf.float32)
+    rnn_outputs, rnn_final_state = tf.nn.dynamic_rnn(cell, rnn_input, initial_state=rnn_init_state)
 
     w_rnn_out = get_weight_variable([rnn_state_size, num_classes])
     b_rnn_out = get_bias_variable([num_classes])
 
     rnn_outputs = tf.reshape(rnn_outputs, [-1, rnn_state_size])
     logits = tf.matmul(rnn_outputs, w_rnn_out) + b_rnn_out
-    logits = tf.reshape(logits, input_dims[0:2] + [num_classes])
+    tmp_dim1 = input_dims[1]
+    logits = tf.reshape(logits, [-1, tmp_dim1, num_classes])
 
-    last_output = tf.slice(logits, [0, input_dims[1]-1, 0], [input_dims[0], 1, num_classes])
+    last_output = tf.slice(logits, [0, input_dims[1]-1, 0], [batch_size, 1, num_classes])
     predictions_one_hot = tf.nn.softmax(tf.squeeze(last_output))
     predictions = tf.argmax(predictions_one_hot, axis=1)
 
@@ -92,8 +113,8 @@ def build_cnn_lstm_graph(params):
     return dict(
         x = x,
         y = y,
-        rnn_init_state = rnn_init_state,
-        rnn_final_state = rnn_final_state,
+        init_state = rnn_init_state,
+        final_state = rnn_final_state,
         total_loss = total_loss,
         train_step = train_step,
         predictions = predictions

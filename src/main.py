@@ -118,8 +118,10 @@ if __name__ == '__main__':
         cnn_layer_num = 3,
         cnn_filter_num = [32, 64, 64],
         cnn_pool_size = [2, 1, 1],
+        fc_layer_size = [1024, 512, 256],
         rnn_state_size = 100,
         learning_rate = 1e-4,
+        batch_size = 32,
         num_epochs = 50
     )
 
