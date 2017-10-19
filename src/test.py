@@ -98,7 +98,7 @@ def predict(speaker_list, model_path, model_name, out_path):
     #TODO: read hyper-parameters from model file
     # hyper-parameters
     batch_size = 128
-    num_steps = 15
+    num_steps = 20
     # out_file = open(out_path, 'w')
     # out_file.write('id,phone_sequence\n')
 
@@ -142,12 +142,12 @@ def predict(speaker_list, model_path, model_name, out_path):
                 phone_wise.append([ids[idx][-1], predict_[idx]])
 
     # Generate phone sequences
-    output_phone_wise(phone_wise, os.path.join(out_path, '07_phone_wise_train.out'), level=1)
-    output_phone_sequence(phone_wise, os.path.join(out_path, '07_phone_sequence_train.out'), 2)
+    output_phone_wise(phone_wise, os.path.join(out_path, '08_phone_wise_train.out'), level=1)
+    output_phone_sequence(phone_wise, os.path.join(out_path, '08_phone_sequence_train.out'), 2)
 
 if __name__ == '__main__':
-    model_path = './model/rnn_lstm/'
-    model_name = '06'
+    model_path = './model/cnn_rnn_lstm/'
+    model_name = '01'
     test_data = utility.read_data('./data', 'mfcc', 'train')
-    speaker_list = utility.gen_speaker_list(phone_idx_map, 15, test_data)
+    speaker_list = utility.gen_speaker_list(phone_idx_map, 20, test_data)
     predict(speaker_list, model_path, model_name, './out')

@@ -51,4 +51,25 @@ RNN with LSTM.
 - **Output smoothing**: length = 2
 - Loss after 60 epochs ~ 0.9
 - Kaggle score = 12.8
-- - output file: 0\_phone\_{wise, sequence}.out
+- - output file: 07\_phone\_{wise, sequence}.out
+
+## Model 2:
+CNN plus LSTM
+
+#### Observation 1
+-	Overfitting occurs in this model
+-	`cnn_filter_num` = `[32, 64, 64]`
+-	`cnn_pool_size` = `[2, 1, 1]`
+-	`fc_layer_size` = `[1024, 512, 256]`
+-	`rnn_state_size` = `100`
+-	`batch_size` = 128
+-	@27epoch: Traning loss ~ 0.3 but validation ~ 0.4 to 0.5
+
+#### Observations 2
+- Overfitting.
+-	`cnn_filter_num` = `[32, 32, 32]`
+-	`cnn_pool_size` = `[2, 1, 1]`
+-	`fc_layer_size` = `[1024, 512, 256]`
+-	`rnn_state_size` = `100`
+-	`batch_size` = 128
+-	@25epoch: Traning loss ~ 0.4 but validation ~ 0.4 to 0.7

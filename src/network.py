@@ -33,6 +33,7 @@ def build_cnn_lstm_graph(params):
     fc_layer_size = params['fc_layer_size'] # FC layer sizes (a list of int)
     rnn_state_size = params['rnn_state_size']
     learning_rate = params['learning_rate']
+
     # rnn_num_steps = params['rnn_num_steps']
     assert(cnn_layer_num == len(cnn_filter_num))
 
@@ -41,6 +42,7 @@ def build_cnn_lstm_graph(params):
     name='cnn_input_layer')
     y = tf.placeholder(tf.int32, [None, num_steps], \
     name='rnn_output_layer')
+    keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 
     # CNN layers
     # x_4d = tf.reshape(x [None, num_steps, feature_size, 1])
@@ -74,8 +76,10 @@ def build_cnn_lstm_graph(params):
         fc_w = get_weight_variable([input_dim, fc_layer_size[idx]])
         fc_b = get_bias_variable([fc_layer_size[idx]])
         # tmp = tf.reshape(hs[-1], [-1, input_dim])
-        last_output = tf.nn.relu(tf.matmul(last_output, fc_w) + fc_b) #NOTE not sure whether to use activation or not
-    
+        fc_output = tf.nn.relu(tf.matmul(last_output, fc_w) + fc_b) #NOTE not sure whether to use activation or not
+        fc_drop = tf.nn.dropout(fc_output, keep_prob)
+        last_output = fc_drop
+
     print('FC output. Tensor shape = ', last_output.get_shape().as_list())
 
     rnn_input = tf.reshape(last_output, [-1, num_steps, fc_layer_size[-1]])
@@ -113,6 +117,7 @@ def build_cnn_lstm_graph(params):
     return dict(
         x = x,
         y = y,
+        keep_prob = keep_prob,
         init_state = rnn_init_state,
         final_state = rnn_final_state,
         total_loss = total_loss,

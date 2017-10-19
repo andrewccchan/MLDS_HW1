@@ -37,7 +37,7 @@ def eval_network(sess, test_speaker, graph, params, max_speaker=None):
             ids.append(d[0])
             x.append(d[1])
             y.append(d[2])
-        feed_dict = {graph['x']:x, graph['y']:y}
+        feed_dict = {graph['x']:x, graph['y']:y, graph['keep_prob']:1.0}
         loss_, _ = sess.run([graph['total_loss'],
                 graph['train_step']], feed_dict=feed_dict)
         total_loss += loss_
@@ -80,7 +80,7 @@ def train_network(speaker_list, graph, params, model_path):
                 x.append(d[1])
                 y.append(d[2])
             # Fill feed_dict
-            feed_dict = {graph['x']:x, graph['y']:y}
+            feed_dict = {graph['x']:x, graph['y']:y, graph['keep_prob']:0.5}
             if training_state is not None:
                 graph['init_state'] = training_state
             training_loss_, training_state, _ = \
@@ -116,13 +116,13 @@ if __name__ == '__main__':
         num_classes = 48,
         cnn_filter_size = 3,
         cnn_layer_num = 3,
-        cnn_filter_num = [32, 64, 64],
+        cnn_filter_num = [32, 32, 32],
         cnn_pool_size = [2, 1, 1],
-        fc_layer_size = [1024, 512, 256],
+        fc_layer_size = [640, 512, 256],
         rnn_state_size = 100,
         learning_rate = 1e-4,
         batch_size = 32,
-        num_epochs = 50
+        num_epochs = 50,
     )
 
     (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')

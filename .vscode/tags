@@ -12,20 +12,22 @@ X	../src/utility.py	/^    X = None$/;"	kind:variable	line:7
 __init__	../src/utility.py	/^    def __init__(self, num_steps, X, y=None):$/;"	kind:member	line:14
 __init__	../src/utility.py	/^    def __init__(self, speaker_list, batch_size=32):$/;"	kind:member	line:58
 batch_size	../playground/genbatch_test.py	/^    batch_size = 32$/;"	kind:variable	line:20
+batch_size	../src/main.py	/^        batch_size = 32,$/;"	kind:variable	line:124
 batch_size	../src/utility.py	/^    batch_size = 32$/;"	kind:variable	line:53
 begin	../src/utility.py	/^    begin = 0$/;"	kind:variable	line:12
 build_cnn_lstm_graph	../src/network.py	/^def build_cnn_lstm_graph(params):$/;"	kind:function	line:21
-build_lstm_graph	../src/network.py	/^def build_lstm_graph(params):$/;"	kind:function	line:104
+build_lstm_graph	../src/network.py	/^def build_lstm_graph(params):$/;"	kind:function	line:129
 check_next_batch	../src/utility.py	/^    def check_next_batch(self):$/;"	kind:member	line:67
-cnn_filter_num	../src/main.py	/^        cnn_filter_num = [32, 64, 64],$/;"	kind:variable	line:119
+cnn_filter_num	../src/main.py	/^        cnn_filter_num = [32, 32, 32],$/;"	kind:variable	line:119
 cnn_filter_size	../src/main.py	/^        cnn_filter_size = 3,$/;"	kind:variable	line:117
 cnn_layer_num	../src/main.py	/^        cnn_layer_num = 3,$/;"	kind:variable	line:118
 cnn_pool_size	../src/main.py	/^        cnn_pool_size = [2, 1, 1],$/;"	kind:variable	line:120
 conv2d	../src/network.py	/^def conv2d(x, W):$/;"	kind:function	line:13
 cur_spk	../src/utility.py	/^    cur_spk = None$/;"	kind:variable	line:55
 data	../playground/genbatch_test.py	/^    data = range(1, 159)$/;"	kind:variable	line:22
-data	../src/main.py	/^    data = utility.read_data('.\/data', 'mfcc', 'train')$/;"	kind:variable	line:127
+data	../src/main.py	/^    data = utility.read_data('.\/data', 'mfcc', 'train')$/;"	kind:variable	line:129
 eval_network	../src/main.py	/^def eval_network(sess, test_speaker, graph, params, max_speaker=None):$/;"	kind:function	line:14
+fc_layer_size	../src/main.py	/^        fc_layer_size = [640, 512, 256],$/;"	kind:variable	line:121
 feature_size	../src/main.py	/^        feature_size = 39,$/;"	kind:variable	line:114
 gen_batch	../playground/genbatch_test.py	/^def gen_batch(data, batch_size, num_steps):$/;"	kind:function	line:4
 gen_batch	../src/utility.py	/^    def gen_batch(self):$/;"	kind:member	line:70
@@ -37,19 +39,19 @@ genbatch_test.py	../playground/genbatch_test.py	1;"	kind:file	line:1
 get_bias_variable	../src/network.py	/^def get_bias_variable(shape):$/;"	kind:function	line:9
 get_speaker_id	../src/test.py	/^def get_speaker_id(phone_id):$/;"	kind:function	line:46
 get_weight_variable	../src/network.py	/^def get_weight_variable(shape):$/;"	kind:function	line:5
-graph	../src/main.py	/^    graph = network.build_cnn_lstm_graph(params)$/;"	kind:variable	line:136
+graph	../src/main.py	/^    graph = network.build_cnn_lstm_graph(params)$/;"	kind:variable	line:138
 has_next	../src/utility.py	/^    def has_next(self):$/;"	kind:member	line:31
 has_next_batch	../src/utility.py	/^    has_next_batch = True$/;"	kind:variable	line:56
 has_next_speaker	../src/utility.py	/^    def has_next_speaker(self):$/;"	kind:member	line:64
 ids	../src/utility.py	/^    ids = None$/;"	kind:variable	line:10
-labels	../src/main.py	/^    labels = utility.read_train_labels('.\/data\/train.lab')$/;"	kind:variable	line:128
-learning_rate	../src/main.py	/^        learning_rate = 1e-4,$/;"	kind:variable	line:122
+labels	../src/main.py	/^    labels = utility.read_train_labels('.\/data\/train.lab')$/;"	kind:variable	line:130
+learning_rate	../src/main.py	/^        learning_rate = 1e-4,$/;"	kind:variable	line:123
 main.py	../src/main.py	1;"	kind:file	line:1
 math	../src/utility.py	/^import math$/;"	kind:namespace	line:160
 max_pool	../src/network.py	/^def max_pool(x, pool_size):$/;"	kind:function	line:17
-model_name	../src/test.py	/^    model_name = '06'$/;"	kind:variable	line:150
-model_path	../src/main.py	/^    model_path = '.\/model\/cnn_rnn_lstm\/01'$/;"	kind:variable	line:131
-model_path	../src/test.py	/^    model_path = '.\/model\/rnn_lstm\/'$/;"	kind:variable	line:149
+model_name	../src/test.py	/^    model_name = '01'$/;"	kind:variable	line:150
+model_path	../src/main.py	/^    model_path = '.\/model\/cnn_rnn_lstm\/01'$/;"	kind:variable	line:133
+model_path	../src/test.py	/^    model_path = '.\/model\/cnn_rnn_lstm\/'$/;"	kind:variable	line:149
 network	../src/main.py	/^import network$/;"	kind:namespace	line:5
 network.py	../src/network.py	1;"	kind:file	line:1
 np	../playground/genbatch_test.py	/^import  numpy as np$/;"	kind:namespace	line:1
@@ -57,7 +59,7 @@ np	../src/main.py	/^import numpy as np$/;"	kind:namespace	line:2
 np	../src/test.py	/^import numpy as np$/;"	kind:namespace	line:3
 np	../src/utility.py	/^import numpy as np$/;"	kind:namespace	line:3
 num_classes	../src/main.py	/^        num_classes = 48,$/;"	kind:variable	line:116
-num_epochs	../src/main.py	/^        num_epochs = 50$/;"	kind:variable	line:123
+num_epochs	../src/main.py	/^        num_epochs = 50,$/;"	kind:variable	line:125
 num_steps	../playground/genbatch_test.py	/^    num_steps = 11$/;"	kind:variable	line:21
 num_steps	../src/main.py	/^        num_steps = 20,$/;"	kind:variable	line:115
 num_steps	../src/utility.py	/^    num_steps = -1$/;"	kind:variable	line:11
@@ -77,10 +79,10 @@ read_data	../src/utility.py	/^def read_data(data_path, fea_type, mode="train"):$
 read_map	../src/utility.py	/^def read_map(path):$/;"	kind:function	line:193
 read_train_labels	../src/utility.py	/^def read_train_labels(file_path):$/;"	kind:function	line:99
 reset	../src/utility.py	/^    def reset(self):$/;"	kind:member	line:48
-rnn_state_size	../src/main.py	/^        rnn_state_size = 100,$/;"	kind:variable	line:121
+rnn_state_size	../src/main.py	/^        rnn_state_size = 100,$/;"	kind:variable	line:122
 speaker_cnt	../src/utility.py	/^    speaker_cnt = 0$/;"	kind:variable	line:54
-speaker_list	../src/main.py	/^    speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)$/;"	kind:variable	line:129
-speaker_list	../src/test.py	/^    speaker_list = utility.gen_speaker_list(phone_idx_map, 15, test_data)$/;"	kind:variable	line:152
+speaker_list	../src/main.py	/^    speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)$/;"	kind:variable	line:131
+speaker_list	../src/test.py	/^    speaker_list = utility.gen_speaker_list(phone_idx_map, 20, test_data)$/;"	kind:variable	line:152
 speaker_list	../src/utility.py	/^    speaker_list = []$/;"	kind:variable	line:52
 split_train_test	../src/main.py	/^def split_train_test(data, test_ratio):$/;"	kind:function	line:8
 test.py	../src/test.py	1;"	kind:file	line:1
