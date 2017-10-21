@@ -113,6 +113,8 @@ def build_cnn_lstm_graph(params):
     tf.add_to_collection('total_loss', total_loss)
     tf.add_to_collection('x', x)
     tf.add_to_collection('y', y)
+    tf.add_to_collection('keep_prob', keep_prob)
+    
 
     return dict(
         x = x,

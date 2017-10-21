@@ -213,3 +213,9 @@ def read_map(path):
             phone_reduce_map[fields[0]] = fields[1]
             reduce_char_map[fields[1]] = idx_char_map[phone_idx_map[fields[1]]]
     return (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map)
+
+def merge_features(mfcc, fbank):
+    data = []
+    for idx, fea in enumerate(mfcc):
+        data.append(np.concatenate((fea, fbank[idx][1:])))
+    return np.asarray(data)

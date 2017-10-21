@@ -114,6 +114,7 @@ def predict(speaker_list, model_path, model_name, out_path):
         # all_vars = tf.trainable_variables()
         X = tf.get_collection('x')[0]
         y = tf.get_collection('y')[0]
+        keep_prob = tf.get_collection('keep_prob')[0]
         loss = tf.get_collection('total_loss')[0]
         predictions = tf.get_collection('predictions')[0]
 
@@ -132,7 +133,7 @@ def predict(speaker_list, model_path, model_name, out_path):
             actual_batch_size = len(x)
             # print('actual_batch_size: ', actual_batch_size)
             dummy_y = np.zeros((actual_batch_size, num_steps))
-            feed_dict = {X: x, y: dummy_y}
+            feed_dict = {X: x, y: dummy_y, keep_prob:1}
             loss_, predict_ = sess.run([loss, predictions], feed_dict=feed_dict)
             total_loss += loss_
 
@@ -142,12 +143,14 @@ def predict(speaker_list, model_path, model_name, out_path):
                 phone_wise.append([ids[idx][-1], predict_[idx]])
 
     # Generate phone sequences
-    output_phone_wise(phone_wise, os.path.join(out_path, '08_phone_wise_train.out'), level=1)
-    output_phone_sequence(phone_wise, os.path.join(out_path, '08_phone_sequence_train.out'), 2)
+    output_phone_wise(phone_wise, os.path.join(out_path, '09_phone_wise_train.out'), level=1)
+    output_phone_sequence(phone_wise, os.path.join(out_path, '09_phone_sequence_train.out'), 2)
 
 if __name__ == '__main__':
     model_path = './model/cnn_rnn_lstm/'
-    model_name = '01'
-    test_data = utility.read_data('./data', 'mfcc', 'train')
+    model_name = '04'
+    test_data_mfcc = utility.read_data('./data', 'mfcc', 'train')
+    test_data_fbank = utility.read_data('./data', 'fbank', 'train')
+    test_data = utility.merge_features(test_data_mfcc, test_data_fbank)
     speaker_list = utility.gen_speaker_list(phone_idx_map, 20, test_data)
     predict(speaker_list, model_path, model_name, './out')
