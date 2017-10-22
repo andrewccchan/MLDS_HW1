@@ -120,7 +120,7 @@ def train_network(speaker_list, graph, params, model_path, logging_file):
 
 import os
 if __name__ == '__main__':
-    # os.environ['CUDA_VISIBLE_DEVICES']='1'
+    os.environ['CUDA_VISIBLE_DEVICES']='0'
     params = dict(
         feature_size = 108,
         num_steps = 20,
@@ -129,11 +129,11 @@ if __name__ == '__main__':
         cnn_layer_num = 3,
         cnn_filter_num = [32, 32, 32],
         cnn_pool_size = [2, 1, 1],
-        fc_layer_size = [640, 512, 256],
-        rnn_state_size = 100,
+        fc_layer_size = [1024, 512, 256],
+        rnn_state_size = 256,
         learning_rate = 1e-4,
         batch_size = 128,
-        num_epochs = 50,
+        num_epochs = 70,
     )
 
     (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')
@@ -142,10 +142,10 @@ if __name__ == '__main__':
     data = utility.merge_features(mfcc_feature, fbank_feature)
     # print(data[0])
     labels = utility.read_train_labels('./data/train.lab')
-    speaker_list = utility.gen_speaker_list(phone_idx_map, params['num_steps'], data, labels)
+    speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, params['num_steps'], data, labels)
     # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/cnn_rnn_lstm/01'
-    logging_file = './log/cnn_rnn_lstm/01'
+    model_path = './model/cnn_rnn_lstm/08'
+    logging_file = './log/cnn_rnn_lstm/08'
 
 
 

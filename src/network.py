@@ -89,6 +89,7 @@ def build_cnn_lstm_graph(params):
     input_dims = rnn_input.get_shape().as_list()
     batch_size = tf.shape(rnn_input)[0]
     cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
+    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 3, state_is_tuple=True)
     rnn_init_state = cell.zero_state(batch_size, tf.float32)
     rnn_outputs, rnn_final_state = tf.nn.dynamic_rnn(cell, rnn_input, initial_state=rnn_init_state)
 
@@ -151,6 +152,7 @@ def build_lstm_graph(params):
     # y_one_hot = tf.one_hot(y, num_classes, dtype=tf.int32)
 
     cell = tf.nn.rnn_cell.LSTMCell(state_size, state_is_tuple=True)
+    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 3, state_is_tuple=True)
     init_state = cell.zero_state(batch_size, tf.float32)
     rnn_outputs, final_state = tf.nn.dynamic_rnn(cell, x, initial_state=init_state)
 

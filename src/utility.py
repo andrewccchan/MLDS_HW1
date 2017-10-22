@@ -102,7 +102,7 @@ def read_train_labels(file_path):
     return np.asarray(df.values)
 
 # parse input data by speaker and spair data with labels if labels are given
-def gen_speaker_list(phone_idx_map, num_steps, data, labels=None):
+def gen_speaker_list(phone_reduce_map, phone_idx_map, num_steps, data, labels=None):
     print('Generating speaker list')
     speakers = []
 
@@ -133,7 +133,7 @@ def gen_speaker_list(phone_idx_map, num_steps, data, labels=None):
         last_speaker = cur_speaker
         tmp_X.append(data[i, :])
         if train_mode:
-            tmp_y.append(phone_idx_map[label_dict[fea_id]])
+            tmp_y.append(phone_idx_map[phone_reduce_map[label_dict[fea_id]]])
 
     # add the last speaker to the list
     if train_mode:
@@ -155,40 +155,6 @@ def pair_data_label(data, labels, phone_idx_map):
         X.append(data[i, 1:])
         y.append(phone_idx_map[label_dict[instance_id]])
     return (X, y)
-
-import random
-import math
-
-def gen_batch(X, y, batch_size, num_steps, random_batch):
-    """
-    Return one mini-batch of data at a time
-    If random_batch == False, sequentially read X and return one batch at a time
-    If random_batch == True, randomly return one batch of data
-    """
-    X = np.asarray(X)
-    y = np.asarray(y)
-    n_batch = (X.shape[0] - num_steps + 1) // (batch_size) + 1
-    # batch_length = batch_size * num_steps
-    for i in range(n_batch):
-        X_batch = []
-        y_batch = []
-        if random_batch:
-            i = math.floor(random.random() * n_batch)
-
-        for j in range(batch_size * i, batch_size * (i + 1)):
-            begin = j
-            end = j + num_steps
-            if end > X.shape[0]:
-                break
-            # end = end if end < X.shape[0] else X.shape[0]
-            X_batch.append(X[begin:end, :])
-            y_batch.append(y[begin:end])
-        # print(np.asarray(X_batch).shape)
-        yield (X_batch, y_batch)
-
-def gen_epochs(X, y, n_epochs, batch_size, num_steps, random_batch=False):
-    for _ in range(n_epochs):
-        yield gen_batch(X, y, batch_size, num_steps, random_batch)
 
 def read_map(path):
     print('Reading map file')

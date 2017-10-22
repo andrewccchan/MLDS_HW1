@@ -85,4 +85,34 @@ CNN plus LSTM
 -	@25 epoch: Traning loss ~ 0.7; validation ~ 0.5 to 0.7
 -	@50 epoch: Tranining loss ~ 0.5 to 0.6, validation ~ 0.6 (slightly overfitted)
 -	Kaggle Score: 11.3
+-	
 - 	output file: 09\_phone\_{wise, sequence}.out
+
+
+### Setting 2:
+-	`cnn_filter_num` = `[32, 32, 32]`
+-	`cnn_pool_size` = `[2, 1, 1]`
+-	`fc_layer_size` = `[640, 512, 256]`
+-	`rnn_state_size` = `100`
+-	`batch_size` = 128
+-	`kernel` = 2D
+-	`keep_prob` = 0.7 at training
+-	`Single layer LSTM`: state_size = 256
+-	@40 epoch: Traning loss ~ 0.5; validation ~ 0.5 
+-	Kaggle Score: 10.4
+-	model file: 07
+- 	output file: 10\_phone\_{wise, sequence}.out
+
+### Setting 3:
+-	`cnn_filter_num` = `[32, 32, 32]`
+-	`cnn_pool_size` = `[2, 1, 1]`
+-	`fc_layer_size` = `[1024, 512, 256]`
+-	`rnn_state_size` = `256`
+-	`batch_size` = 128
+-	`kernel` = 2D
+-	`keep_prob` = 0.7 at training
+-	`Single layer LSTM`: state_size = 256
+-	@70 epoch: Traning loss ~ 0.3; validation ~ 0.3 to 0.4 
+-	Kaggle Score: 10.64
+-	model file: 08
+- 	output file: 11\_phone\_{wise, sequence}.out
