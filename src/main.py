@@ -75,7 +75,9 @@ def train_network(speaker_list, graph, params, model_path, logging_file):
         batch_gen = BatchGenerator(train_speaker, batch_size)
         step = 0
         training_loss = 0
-        training_state = None
+        training_state_fw = None
+        training_state_bw = None
+        
         while batch_gen.check_next_batch():
             data = batch_gen.gen_batch()
             x = []
@@ -87,11 +89,14 @@ def train_network(speaker_list, graph, params, model_path, logging_file):
                 y.append(d[2])
             # Fill feed_dict
             feed_dict = {graph['x']:x, graph['y']:y, graph['keep_prob']:0.5}
-            if training_state is not None:
-                graph['init_state'] = training_state
-            training_loss_, training_state, _ = \
+            if training_state_fw is not None:
+                graph['init_state_fw'] = training_state_fw
+                graph['init_state_bw'] = training_state_bw
+                
+            training_loss_, training_state_fw, training_state_bw, _ = \
             sess.run([graph['total_loss'],
-                    graph['final_state'],
+                    graph['final_state_fw'],
+                    graph['final_state_bw'],
                     graph['train_step']], feed_dict=feed_dict)
             training_loss += training_loss_
 
@@ -123,7 +128,7 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES']='0'
     params = dict(
         feature_size = 108,
-        num_steps = 20,
+        num_steps = 31, # can only be a singluar number
         num_classes = 48,
         cnn_filter_size = 3,
         cnn_layer_num = 3,
@@ -144,13 +149,14 @@ if __name__ == '__main__':
     labels = utility.read_train_labels('./data/train.lab')
     speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, params['num_steps'], data, labels)
     # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/cnn_rnn_lstm/08'
-    logging_file = './log/cnn_rnn_lstm/08'
+    model_path = './model/cnn_rnn_lstm/11'
+    logging_file = './log/cnn_rnn_lstm/11'
 
 
 
     # Building network
-    graph = network.build_cnn_lstm_graph(params)
+    # graph = network.build_cnn_lstm_graph(params)
+    graph = network.build_lstm_graph(params)
 
     # Training
     sess, training_losses = train_network(speaker_list, graph, params, model_path, logging_file)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # import numpy as np
 import tensorflow as tf
+import math
 
 def get_weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
@@ -89,19 +90,29 @@ def build_cnn_lstm_graph(params):
     input_dims = rnn_input.get_shape().as_list()
     batch_size = tf.shape(rnn_input)[0]
     cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
-    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 3, state_is_tuple=True)
-    rnn_init_state = cell.zero_state(batch_size, tf.float32)
-    rnn_outputs, rnn_final_state = tf.nn.dynamic_rnn(cell, rnn_input, initial_state=rnn_init_state)
+    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 2, state_is_tuple=True)
+    rnn_init_state_fw = cell.zero_state(batch_size, tf.float32)
+    rnn_init_state_bw = cell.zero_state(batch_size, tf.float32)
+    rnn_outputs, rnn_final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell, cell_bw=cell, inputs=rnn_input,
+                                initial_state_fw=rnn_init_state_fw, initial_state_bw=rnn_init_state_bw)
+    output_fw, output_bw = rnn_outputs
+    final_state_fw, final_state_bw = rnn_final_state
+    
+    
 
-    w_rnn_out = get_weight_variable([rnn_state_size, num_classes])
+    w_rnn_out_fw = get_weight_variable([rnn_state_size, num_classes])
     b_rnn_out = get_bias_variable([num_classes])
+    w_rnn_out_bw = get_weight_variable([rnn_state_size, num_classes])
 
-    rnn_outputs = tf.reshape(rnn_outputs, [-1, rnn_state_size])
-    logits = tf.matmul(rnn_outputs, w_rnn_out) + b_rnn_out
+    # rnn_outputs = tf.reshape(rnn_outputs, [-1, rnn_state_size])
+    output_fw = tf.reshape(output_fw, [-1, rnn_state_size])
+    output_bw = tf.reshape(output_bw, [-1, rnn_state_size])
+    logits = tf.matmul(output_fw, w_rnn_out_fw) + tf.matmul(output_bw, w_rnn_out_bw) + b_rnn_out
     tmp_dim1 = input_dims[1]
     logits = tf.reshape(logits, [-1, tmp_dim1, num_classes])
 
-    last_output = tf.slice(logits, [0, input_dims[1]-1, 0], [batch_size, 1, num_classes])
+    output_idx = int(math.floor(input_dims[1] / 2)) - 1
+    last_output = tf.slice(logits, [0, output_idx, 0], [batch_size, 1, num_classes])
     predictions_one_hot = tf.nn.softmax(tf.squeeze(last_output))
     predictions = tf.argmax(predictions_one_hot, axis=1)
 
@@ -121,8 +132,10 @@ def build_cnn_lstm_graph(params):
         x = x,
         y = y,
         keep_prob = keep_prob,
-        init_state = rnn_init_state,
-        final_state = rnn_final_state,
+        init_state_fw = rnn_init_state_fw,
+        init_state_bw = rnn_init_state_bw,
+        final_state_fw = final_state_fw,
+        final_state_bw = final_state_bw,
         total_loss = total_loss,
         train_step = train_step,
         predictions = predictions
@@ -134,42 +147,54 @@ def build_lstm_graph(params):
     Building a RNN network with LSTM
     """
     # hyperparameters
-    state_size = params['state_size']
+    rnn_state_size = params['rnn_state_size']
     num_classes = params['num_classes']
     batch_size = params['batch_size']
     num_steps = params['num_steps']
     # num_layer = 1
-    fea_num = params['fea_num']
+    fea_num = params['feature_size']
     learning_rate = params['learning_rate']
 
     x = tf.placeholder(tf.float32, [None, num_steps, fea_num],\
     name='input_placeholder')
     y = tf.placeholder(tf.int32, [None, num_steps],\
     name='output_placeholder')
+    # dummy variable
+    keep_prob = tf.placeholder(tf.float32, name='keep_prob')
+    
 
     batch_size = tf.shape(x)[0]
     # Coding ouput by one-hot encoding
     # y_one_hot = tf.one_hot(y, num_classes, dtype=tf.int32)
 
-    cell = tf.nn.rnn_cell.LSTMCell(state_size, state_is_tuple=True)
-    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 3, state_is_tuple=True)
-    init_state = cell.zero_state(batch_size, tf.float32)
-    rnn_outputs, final_state = tf.nn.dynamic_rnn(cell, x, initial_state=init_state)
+    cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
+    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 2, state_is_tuple=True)
+    rnn_init_state_fw = cell.zero_state(batch_size, tf.float32)
+    rnn_init_state_bw = cell.zero_state(batch_size, tf.float32)
+    rnn_outputs, rnn_final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell, cell_bw=cell, inputs=x,
+                                initial_state_fw=rnn_init_state_fw, initial_state_bw=rnn_init_state_bw)
+    output_fw, output_bw = rnn_outputs
+    final_state_fw, final_state_bw = rnn_final_state
 
-    with tf.variable_scope('softmax'):
-        W = tf.get_variable('W', [state_size, num_classes])
-        b = tf.get_variable('b', [num_classes], initializer=tf.constant_initializer(0.0))
+    w_rnn_out_fw = get_weight_variable([rnn_state_size, num_classes])
+    b_rnn_out = get_bias_variable([num_classes])
+    w_rnn_out_bw = get_weight_variable([rnn_state_size, num_classes])
 
-    rnn_outputs = tf.reshape(rnn_outputs, [-1, state_size])
-    # y_reshaped = tf.reshape(y_one_hot, [-1])
-    logits = tf.reshape(tf.matmul(rnn_outputs, W) + b, [batch_size, num_steps, num_classes])
-    last_frame = tf.slice(logits, [0, num_steps-1, 0], [batch_size, 1, num_classes])
-    predictions_one_hot = tf.nn.softmax(tf.squeeze(last_frame))
+    # rnn_outputs = tf.reshape(rnn_outputs, [-1, rnn_state_size])
+    output_fw = tf.reshape(output_fw, [-1, rnn_state_size])
+    output_bw = tf.reshape(output_bw, [-1, rnn_state_size])
+    logits = tf.matmul(output_fw, w_rnn_out_fw) + tf.matmul(output_bw, w_rnn_out_bw) + b_rnn_out
+    # tmp_dim1 = input_dims[1]
+    logits = tf.reshape(logits, [-1, num_steps, num_classes])
+
+    output_idx = int(math.floor(num_steps / 2)) - 1
+    last_output = tf.slice(logits, [0, output_idx, 0], [batch_size, 1, num_classes])
+    predictions_one_hot = tf.nn.softmax(tf.squeeze(last_output))
     predictions = tf.argmax(predictions_one_hot, axis=1)
 
     total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y))
     train_step = tf.train.AdamOptimizer(learning_rate).minimize(total_loss)
-
+    
     tf.add_to_collection('predictions', predictions)
     tf.add_to_collection('train_step', train_step)
     tf.add_to_collection('total_loss', total_loss)
@@ -180,8 +205,11 @@ def build_lstm_graph(params):
     return dict(
         x = x,
         y = y,
-        init_state = init_state,
-        final_state = final_state,
+        keep_prob = keep_prob,
+        init_state_fw = rnn_init_state_fw,
+        init_state_bw = rnn_init_state_bw,
+        final_state_fw = final_state_fw,
+        final_state_bw = final_state_bw,
         total_loss = total_loss,
         train_step = train_step,
         predictions = predictions

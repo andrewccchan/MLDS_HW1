@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import utility
 from utility import BatchGenerator
+import math
 
 # Global variables
 # Mapping files
@@ -139,8 +140,9 @@ def predict(speaker_list, model_path, model_name, out_path):
 
             # print(predict_)
             # Store phone-wise predictions
+            prediction_idx = int(math.floor(num_steps / 2))
             for idx in range(actual_batch_size):
-                phone_wise.append([ids[idx][-1], predict_[idx]])
+                phone_wise.append([ids[idx][prediction_idx], predict_[idx]])
 
     # Generate phone sequences
     output_phone_wise(phone_wise, os.path.join(out_path, '09_phone_wise_train.out'), level=1)
@@ -152,5 +154,5 @@ if __name__ == '__main__':
     test_data_mfcc = utility.read_data('./data', 'mfcc', 'train')
     test_data_fbank = utility.read_data('./data', 'fbank', 'train')
     test_data = utility.merge_features(test_data_mfcc, test_data_fbank)
-    speaker_list = utility.gen_speaker_list(phone_idx_map, 20, test_data)
+    speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, 20, test_data)
     predict(speaker_list, model_path, model_name, './out')

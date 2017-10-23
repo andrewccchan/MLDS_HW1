@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import pandas as pd
+import math
 
 class Speaker:
     X = None
@@ -12,19 +13,20 @@ class Speaker:
     begin = 0
 
     def __init__(self, num_steps, X, y=None):
+        half_step = int(math.floor(num_steps / 2))
         self.X = X if type(X).__module__ == np.__name__ else np.asarray(X)
         self.train_mode = True if type(y).__module__ == np.__name__ else False
         (m, n) = self.X.shape
         # pad X with zeros
-        padding_x = np.zeros((num_steps - 1, n))
-        X_pad = np.vstack((padding_x, X))
+        padding_x = np.zeros((half_step - 1, n))
+        X_pad = np.vstack((padding_x, X, padding_x))
         self.ids = X_pad[:, 0]
         self.X = X_pad[:, 1:]
-        assert(self.X.shape[0] == m + num_steps - 1)
+        assert(self.X.shape[0] == m + 2*(half_step - 1))
         # pad y if y is given
         if self.train_mode:
-            padding_y = np.ones((num_steps - 1)) * 37
-            self.y = np.concatenate([padding_y, y])
+            padding_y = np.ones((half_step - 1)) * 37
+            self.y = np.concatenate([padding_y, y, padding_y])
         self.num_steps = num_steps
         self.begin = 0
 

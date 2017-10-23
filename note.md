@@ -116,3 +116,18 @@ CNN plus LSTM
 -	Kaggle Score: 10.64
 -	model file: 08
 - 	output file: 11\_phone\_{wise, sequence}.out
+
+### Setting 4:
+-	`cnn_filter_num` = `[32, 32, 32]`
+-	`cnn_pool_size` = `[2, 1, 1]`
+-	`fc_layer_size` = `[640, 512, 256]`
+-	`rnn_state_size` = `256`
+-	`batch_size` = 128
+-	`kernel` = 2D
+-	`keep_prob` = 0.7 at training
+-	`Dual layer LSTM`: state_size = 256
+-	**Bidirecrional** LSTM
+-	@25 epoch: Traning loss ~ 0.45; validation ~ 0.4 to 0.5
+-	Kaggle Score: 8.4
+-	model file: 10
+- 	output file: 13\_phone\_{wise, sequence}.out
