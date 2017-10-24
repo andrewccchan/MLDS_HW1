@@ -88,7 +88,7 @@ def train_network(speaker_list, graph, params, model_path, logging_file):
                 x.append(d[1])
                 y.append(d[2])
             # Fill feed_dict
-            feed_dict = {graph['x']:x, graph['y']:y, graph['keep_prob']:0.5}
+            feed_dict = {graph['x']:x, graph['y']:y, graph['keep_prob']:0.8}
             if training_state_fw is not None:
                 graph['init_state_fw'] = training_state_fw
                 graph['init_state_bw'] = training_state_bw
@@ -125,20 +125,20 @@ def train_network(speaker_list, graph, params, model_path, logging_file):
 
 import os
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES']='0'
+    os.environ['CUDA_VISIBLE_DEVICES']='1'
     params = dict(
         feature_size = 108,
-        num_steps = 31, # can only be a singluar number
+        num_steps = 31, # window size. Can only be a singluar number
         num_classes = 48,
-        cnn_filter_size = 3,
-        cnn_layer_num = 3,
-        cnn_filter_num = [32, 32, 32],
-        cnn_pool_size = [2, 1, 1],
-        fc_layer_size = [1024, 512, 256],
-        rnn_state_size = 256,
+        cnn_filter_size = 3, # 3x3 filter 
+        cnn_layer_num = 3, # number of conv. layers
+        cnn_filter_num = [32, 32, 32], # 32 filters for each layer
+        cnn_pool_size = [2, 1, 1], # only pooling in the first layer
+        fc_layer_size = [640, 512, 256], # three layer fully-connected layer
+        rnn_state_size = 256, 
         learning_rate = 1e-4,
         batch_size = 128,
-        num_epochs = 70,
+        num_epochs = 50, # maximal number of epochs
     )
 
     (phone_idx_map, idx_phone_map, idx_char_map, phone_reduce_map, reduce_char_map) = utility.read_map('./data')
@@ -149,14 +149,13 @@ if __name__ == '__main__':
     labels = utility.read_train_labels('./data/train.lab')
     speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, params['num_steps'], data, labels)
     # (X, y) = utility.pair_data_label(raw_data, labels, phone_idx_map)
-    model_path = './model/cnn_rnn_lstm/11'
-    logging_file = './log/cnn_rnn_lstm/11'
+    model_path = './model/cnn_rnn_lstm/10'
+    logging_file = './log/cnn_rnn_lstm/10'
 
 
 
     # Building network
-    # graph = network.build_cnn_lstm_graph(params)
-    graph = network.build_lstm_graph(params)
+    graph = network.build_cnn_lstm_graph(params)
 
     # Training
     sess, training_losses = train_network(speaker_list, graph, params, model_path, logging_file)

@@ -99,7 +99,7 @@ def predict(speaker_list, model_path, model_name, out_path):
     #TODO: read hyper-parameters from model file
     # hyper-parameters
     batch_size = 128
-    num_steps = 20
+    num_steps = 31
     # out_file = open(out_path, 'w')
     # out_file.write('id,phone_sequence\n')
 
@@ -141,18 +141,21 @@ def predict(speaker_list, model_path, model_name, out_path):
             # print(predict_)
             # Store phone-wise predictions
             prediction_idx = int(math.floor(num_steps / 2))
+
             for idx in range(actual_batch_size):
                 phone_wise.append([ids[idx][prediction_idx], predict_[idx]])
 
     # Generate phone sequences
-    output_phone_wise(phone_wise, os.path.join(out_path, '09_phone_wise_train.out'), level=1)
-    output_phone_sequence(phone_wise, os.path.join(out_path, '09_phone_sequence_train.out'), 2)
+    output_phone_wise(phone_wise, os.path.join(out_path, '13_phone_wise_train.out'), level=1)
+    output_phone_sequence(phone_wise, os.path.join(out_path, '13_phone_sequence_train.out'), 2)
 
+import os
 if __name__ == '__main__':
+    os.environ['CUDA_VISIBLE_DEVICES']='1'
     model_path = './model/cnn_rnn_lstm/'
-    model_name = '04'
+    model_name = '10-24'
     test_data_mfcc = utility.read_data('./data', 'mfcc', 'train')
     test_data_fbank = utility.read_data('./data', 'fbank', 'train')
     test_data = utility.merge_features(test_data_mfcc, test_data_fbank)
-    speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, 20, test_data)
+    speaker_list = utility.gen_speaker_list(phone_reduce_map, phone_idx_map, 31, test_data)
     predict(speaker_list, model_path, model_name, './out')

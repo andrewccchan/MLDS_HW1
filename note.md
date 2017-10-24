@@ -96,7 +96,7 @@ CNN plus LSTM
 -	`rnn_state_size` = `100`
 -	`batch_size` = 128
 -	`kernel` = 2D
--	`keep_prob` = 0.7 at training
+-	`keep_prob` = 0.5? at training
 -	`Single layer LSTM`: state_size = 256
 -	@40 epoch: Traning loss ~ 0.5; validation ~ 0.5 
 -	Kaggle Score: 10.4
@@ -110,7 +110,7 @@ CNN plus LSTM
 -	`rnn_state_size` = `256`
 -	`batch_size` = 128
 -	`kernel` = 2D
--	`keep_prob` = 0.7 at training
+-	`keep_prob` = 0.5? at training
 -	`Single layer LSTM`: state_size = 256
 -	@70 epoch: Traning loss ~ 0.3; validation ~ 0.3 to 0.4 
 -	Kaggle Score: 10.64
@@ -124,7 +124,7 @@ CNN plus LSTM
 -	`rnn_state_size` = `256`
 -	`batch_size` = 128
 -	`kernel` = 2D
--	`keep_prob` = 0.7 at training
+-	`keep_prob` = 0.5 at training
 -	`Dual layer LSTM`: state_size = 256
 -	**Bidirecrional** LSTM
 -	@25 epoch: Traning loss ~ 0.45; validation ~ 0.4 to 0.5

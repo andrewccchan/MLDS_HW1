@@ -162,16 +162,27 @@ def build_lstm_graph(params):
     # dummy variable
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
     
+    print('RNN input. Tensor shape = ', x.get_shape().as_list())
 
     batch_size = tf.shape(x)[0]
     # Coding ouput by one-hot encoding
     # y_one_hot = tf.one_hot(y, num_classes, dtype=tf.int32)
 
-    cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
-    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * 2, state_is_tuple=True)
-    rnn_init_state_fw = cell.zero_state(batch_size, tf.float32)
-    rnn_init_state_bw = cell.zero_state(batch_size, tf.float32)
-    rnn_outputs, rnn_final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell, cell_bw=cell, inputs=x,
+    stacked_rnn = []
+    for _ in range(2):
+        cell = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
+        cell = tf.nn.rnn_cell.DropoutWrapper(cell, input_keep_prob=keep_prob, output_keep_prob=keep_prob)
+        stacked_rnn.append(cell)
+    cell_fw = tf.nn.rnn_cell.MultiRNNCell(stacked_rnn, state_is_tuple=True)
+    cell_bw = tf.nn.rnn_cell.MultiRNNCell(stacked_rnn, state_is_tuple=True)
+
+    # cell_fw = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
+    # cell_fw = tf.nn.rnn_cell.MultiRNNCell([cell_fw] * 2, state_is_tuple=True)
+    # cell_bw = tf.nn.rnn_cell.LSTMCell(rnn_state_size, state_is_tuple=True)
+    # cell_bw = tf.nn.rnn_cell.MultiRNNCell([cell_bw] * 2, state_is_tuple=True)
+    rnn_init_state_fw = cell_fw.zero_state(batch_size, tf.float32)
+    rnn_init_state_bw = cell_bw.zero_state(batch_size, tf.float32)
+    rnn_outputs, rnn_final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell_fw, cell_bw=cell_bw, inputs=x,
                                 initial_state_fw=rnn_init_state_fw, initial_state_bw=rnn_init_state_bw)
     output_fw, output_bw = rnn_outputs
     final_state_fw, final_state_bw = rnn_final_state
